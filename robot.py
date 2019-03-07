@@ -104,6 +104,16 @@ class Gemini(wpilib.TimedRobot):
         self.sd.putString("", "Top Camera")
         self.sd.putString(" ", "Bottom Camera")
 
+        #Initialization and configuration of I2C interface with color sensor.
+        self.colorSensor = wpilib.I2C(wpilib.I2C.Port.kMXP, 1) #Interface
+        self.colorSensor.writeBulk(b'\x10100000')
+        self.colorSensor.write(0x00, 0x00000001) #Add byte to ENABLE register to enable power ON.
+        self.colorSensor.write(0x01, 0xF6)  # Set cycles to 10.
+        self.colorSensor.write(0x0D, 0x00000010)
+        self.colorSensor.write(0x03, 0xFF) #Configure WTIME register.
+        self.colorSensor.write(0x00, 0x00000011) #Add byte to ENABLE register to enable RGBC ADC functions.
+
+
     def autonomousInit(self):
         ''' Executed each time the robot enters autonomous. '''
 
