@@ -105,13 +105,13 @@ class Gemini(wpilib.TimedRobot):
         self.sd.putString(" ", "Bottom Camera")
 
         #Initialization and configuration of I2C interface with color sensor.
-        self.colorSensor = wpilib.I2C(wpilib.I2C.Port.kMXP, 1) #Interface
-        self.colorSensor.writeBulk(b'\x10100000')
-        self.colorSensor.write(0x00, 0x00000001) #Add byte to ENABLE register to enable power ON.
-        self.colorSensor.write(0x01, 0xF6)  # Set cycles to 10.
-        self.colorSensor.write(0x0D, 0x00000010)
+        self.colorSensor = wpilib.I2C(wpilib.I2C.Port.kOnboard, 0) #Interface
+        self.colorSensor.writeBulk(b'\xA0')
+        self.colorSensor.write(0x00, 0x01) #Add byte to ENABLE register to enable power ON.
+        self.colorSensor.write(0x01, 0xC0)  # Set ATIME to 64 cycles.
+        self.colorSensor.write(0x0D, 0x02) #Configure WLONG to influence WTIME
         self.colorSensor.write(0x03, 0xFF) #Configure WTIME register.
-        self.colorSensor.write(0x00, 0x00000011) #Add byte to ENABLE register to enable RGBC ADC functions.
+        self.colorSensor.write(0x00, 0x03) #Add byte to ENABLE register to enable RGBC ADC functions.
 
 
     def autonomousInit(self):
@@ -621,6 +621,10 @@ class Gemini(wpilib.TimedRobot):
 
         self.drive.tankDrive(-(self.leftSign)*(1 / self.divisor)*(leftAxis ** 2), -(self.rightSign)*(1 / self.divisor)*(rightAxis ** 2))
         #self.drive.tankDrive(-leftAxis / self.divisor, -rightAxis/ self.divisor)  # drive divided by appropriate divisor
+
+    def test(self):
+        self.colorSensor.read(0x1A, 1)
+        self.sd.putNumber('blue color data',  self.colorSensor.read(0x1B, 2))
 
 
 if __name__ == '__main__':
