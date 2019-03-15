@@ -8,7 +8,7 @@ from math import *
 from wpilib.drive import DifferentialDrive
 from networktables import NetworkTables
 from ctre import *
-
+from sensors import REV_Color_Sensor_V2
 
 
 class Gemini(wpilib.TimedRobot):
@@ -72,8 +72,8 @@ class Gemini(wpilib.TimedRobot):
         self.Compressor = wpilib.Compressor(0)
         self.Compressor.setClosedLoopControl(True)
         self.enable = self.Compressor.getPressureSwitchValue()
-        self.DoubleSolenoidOne = wpilib.DoubleSolenoid(0, 1)    # gear shifting
-        self.DoubleSolenoidTwo = wpilib.DoubleSolenoid(2, 3)    # hatch panel claw
+        self.DoubleSolenoidOne = wpilib.DoubleSolenoid(0, 1)  # gear shifting
+        self.DoubleSolenoidTwo = wpilib.DoubleSolenoid(2, 3)  # hatch panel claw
         self.DoubleSolenoidThree = wpilib.DoubleSolenoid(4, 5)  # hatch panel ejection
         self.Compressor.start()
 
@@ -104,14 +104,16 @@ class Gemini(wpilib.TimedRobot):
         self.sd.putString("", "Top Camera")
         self.sd.putString(" ", "Bottom Camera")
 
-        #Initialization and configuration of I2C interface with color sensor.
-        self.colorSensor = wpilib.I2C(wpilib.I2C.Port.kOnboard, 0) #Interface
+        # Initialization and configuration of I2C interface with color sensor.
+        self.colorSensor = wpilib.I2C(wpilib.I2C.Port.kOnboard, 0)  # Interface
         self.colorSensor.writeBulk(b'\xA0')
-        self.colorSensor.write(0x00, 0x01) #Add byte to ENABLE register to enable power ON.
+        self.colorSensor.write(0x00, 0x01)  # Add byte to ENABLE register to enable power ON.
         self.colorSensor.write(0x01, 0xC0)  # Set ATIME to 64 cycles.
-        self.colorSensor.write(0x0D, 0x02) #Configure WLONG to influence WTIME
-        self.colorSensor.write(0x03, 0xFF) #Configure WTIME register.
-        self.colorSensor.write(0x00, 0x03) #Add byte to ENABLE register to enable RGBC ADC functions.
+        self.colorSensor.write(0x0D, 0x02)  # Configure WLONG to influence WTIME
+        self.colorSensor.write(0x03, 0xFF)  # Configure WTIME register.
+        self.colorSensor.write(0x00, 0x03)  # Add byte to ENABLE register to enable RGBC ADC functions.
+
+        self.colorSensor = REV_Color_Sensor_V2(wpilib.I2C.Port.kOnboard)
 
 
     def autonomousInit(self):
@@ -131,6 +133,7 @@ class Gemini(wpilib.TimedRobot):
         ''' Called periodically during autonomous. '''
 
         '''Test Methods'''
+
         def encoder_test():
             ''' Drives robot set encoder distance away '''
             self.rightPos = fabs(self.rightEncoder.getQuadraturePosition())
@@ -163,35 +166,35 @@ class Gemini(wpilib.TimedRobot):
                 self.buttonStatus[4] = False
 
         def cargoTwo():
-            if self.liftEncoder.get() <= 270:   # Cargo 2
+            if self.liftEncoder.get() <= 270:  # Cargo 2
                 self.lift.set(0.5)
             elif self.liftEncoder.get() > 270:
                 self.lift.set(0.05)
                 self.buttonStatus[2] = False
 
         def cargoThree():
-            if self.liftEncoder.get() <= 415:   # Cargo 3
+            if self.liftEncoder.get() <= 415:  # Cargo 3
                 self.lift.set(0.5)
             elif self.liftEncoder.get() > 415:
                 self.lift.set(0.05)
                 self.buttonStatus[0] = False
 
         def hatchOne():
-            if self.liftEncoder.get() <= 96:    # Hatch 1
+            if self.liftEncoder.get() <= 96:  # Hatch 1
                 self.lift.set(0.5)
             elif self.liftEncoder.get() > 96:
                 self.lift.set(0.05)
                 self.buttonStatus[5] = False
 
         def hatchTwo():
-            if self.liftEncoder.get() <= 237:   # Hatch 2
+            if self.liftEncoder.get() <= 237:  # Hatch 2
                 self.lift.set(0.5)
             elif self.liftEncoder.get() > 237:
                 self.lift.set(0.05)
                 self.buttonStatus[3] = False
 
         def hatchThree():
-            if self.liftEncoder.get() <= 378:   # Hatch 3
+            if self.liftEncoder.get() <= 378:  # Hatch 3
                 self.lift.set(0.5)
             elif self.liftEncoder.get() > 378:
                 self.lift.set(0.05)
@@ -287,7 +290,7 @@ class Gemini(wpilib.TimedRobot):
         else:
             self.sd.putString("PLAYER STATION RANGE: ", "NO!")
 
-        #self.sd.putNumber("Ultrasonic Voltage: ", self.ultraValue)
+        # self.sd.putNumber("Ultrasonic Voltage: ", self.ultraValue)
 
         # cargo ultrasonic
         self.cargoUltraValue = self.cargoUltrasonic.getVoltage()
@@ -330,7 +333,7 @@ class Gemini(wpilib.TimedRobot):
 
         # four-bar control
         if self.xbox.getRawButton(6):
-           self.liftArm.set(0.05)
+            self.liftArm.set(0.05)
         elif not self.xbox.getRawButton(6):
             self.liftArm.set(-self.xbox.getRawAxis(1) / 4.0)
         else:
@@ -340,7 +343,7 @@ class Gemini(wpilib.TimedRobot):
         if self.xbox.getRawButton(7):
             self.cargo.set(0.12)
         elif self.xbox.getRawAxis(5):  # take in
-            self.cargo.set(self.xbox.getRawAxis(5) *0.75)
+            self.cargo.set(self.xbox.getRawAxis(5) * 0.75)
 
         # controller mapping for tank steering
         rightAxis = self.rightStick.getRawAxis(1)
@@ -363,10 +366,10 @@ class Gemini(wpilib.TimedRobot):
         else:
             self.rightSign = 0
 
-        self.drive.tankDrive(-(self.leftSign)*(1 / self.divisor)*(leftAxis ** 2), -(self.rightSign)*(1 / self.divisor)*(rightAxis ** 2))
+        self.drive.tankDrive(-(self.leftSign) * (1 / self.divisor) * (leftAxis ** 2),
+                             -(self.rightSign) * (1 / self.divisor) * (rightAxis ** 2))
 
-        #self.drive.tankDrive(-leftAxis / self.divisor, -rightAxis/ self.divisor)  # drive divided by appropriate divisor
-
+        # self.drive.tankDrive(-leftAxis / self.divisor, -rightAxis/ self.divisor)  # drive divided by appropriate divisor
 
     def teleopInit(self):
         ''' Executed at the start of teleop mode. '''
@@ -534,7 +537,7 @@ class Gemini(wpilib.TimedRobot):
         else:
             self.sd.putString("PLAYER STATION RANGE: ", "NO!")
 
-        #self.sd.putNumber("Ultrasonic Voltage: ", self.ultraValue)
+        # self.sd.putNumber("Ultrasonic Voltage: ", self.ultraValue)
 
         # cargo ultrasonic
         self.cargoUltraValue = self.cargoUltrasonic.getVoltage()
@@ -586,7 +589,7 @@ class Gemini(wpilib.TimedRobot):
 
         # four-bar control
         if self.xbox.getRawButton(6):
-           self.liftArm.set(0.05)
+            self.liftArm.set(0.05)
         elif not self.xbox.getRawButton(6):
             self.liftArm.set(-self.xbox.getRawAxis(1) / 4.0)
         else:
@@ -619,12 +622,13 @@ class Gemini(wpilib.TimedRobot):
         else:
             self.rightSign = 0
 
-        self.drive.tankDrive(-(self.leftSign)*(1 / self.divisor)*(leftAxis ** 2), -(self.rightSign)*(1 / self.divisor)*(rightAxis ** 2))
-        #self.drive.tankDrive(-leftAxis / self.divisor, -rightAxis/ self.divisor)  # drive divided by appropriate divisor
+        self.drive.tankDrive(-(self.leftSign) * (1 / self.divisor) * (leftAxis ** 2),
+                             -(self.rightSign) * (1 / self.divisor) * (rightAxis ** 2))
+        # self.drive.tankDrive(-leftAxis / self.divisor, -rightAxis/ self.divisor)  # drive divided by appropriate divisor
 
     def test(self):
-        self.colorSensor.read(0x1A, 1)
-        self.sd.putNumber('blue color data',  self.colorSensor.read(0x1B, 2))
+        color = self.colorSensor.getColor()
+        self.sd.putNumber('red color data', color[0])
 
 
 if __name__ == '__main__':
