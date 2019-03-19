@@ -12,7 +12,6 @@ from sensors import REV_Color_Sensor_V2
 
 
 class Gemini(wpilib.TimedRobot):
-    ''' values for navx'''
 
     def robotInit(self):
         ''' Initialization of robot objects. '''
@@ -334,7 +333,7 @@ class Gemini(wpilib.TimedRobot):
         self.drive.setSafetyEnabled(True)
 
         # drive train encoder reset
-        self.frontRightEncoder.setQuadraturePosition(0, 0)
+        self.frontRightMotor.setQuadraturePosition(0, 0)
         self.frontLeftMotor.setQuadraturePosition(0, 0)
 
         # lift encoder rest
@@ -422,11 +421,6 @@ class Gemini(wpilib.TimedRobot):
             hatchOne()
         elif self.buttonStatus[6] is True:
             liftEncoderReset()
-
-        if self.DS.getGameSpecificMessage() == "pressure":
-            Pressure()
-        elif self.DS.getGameSpecificMessage() == "diagnostics":
-            Diagnostics()
 
         # compressor state
         if self.Compressor.enabled() is True:
