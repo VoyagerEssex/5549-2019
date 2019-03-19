@@ -90,7 +90,7 @@ class REV_Color_Sensor_V2(ColorSensorBase):
         if hal.HALIsSimulation():
             simPort = REV_Color_Sim(self)
 
-        self.i2c = wpilib.I2C(port, self.address, simPort=simPort)
+        self.i2c = wpilib.I2C(port, self.ADDRESS, simPort=simPort)
         self.clearChannel = 0
         self.setName("REV_Robotics_Color_Sensor_V2", port)
 

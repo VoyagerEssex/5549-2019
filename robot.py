@@ -1,20 +1,79 @@
 '''
+5549 presents:
 Destination: Deep Space 2019 - GEMINI from Gryphon Robotics
+
+ by:
+ _    _  _____  __   __ _______  ______ _______  ______
+  \  /  |     |   \_/   |_____| |  ____ |______ |_____/
+   \/   |_____|    |    |     | |_____| |______ |    \_
+
+ .. _______  _____  __   _ __   _  _____   ______ ..
+ '' |       |     | | \  | | \  | |     | |_____/ ''
+    |_____  |_____| |  \_| |  \_| |_____| |    \_
+
+ _______ _______ _______ _______ _     _
+ |______ |______ |______ |______  \___/
+ |______ ______| ______| |______ _/   \_
+
+---------------------------------------------------------
+  _____  _______  ______ _______ _____ _______
+ |_____] |_____| |_____/ |______   |   |_____|
+ |       |     | |    \_ ______| __|__ |     |
+
+Leading programming affiliates of:
+
+      ___           ___                       ___         ___           ___           ___                     
+     /\__\         /\  \                     /\  \       /\  \         /\  \         /\  \                    
+    /:/ _/_       /::\  \         ___       /::\  \      \:\  \       /::\  \        \:\  \                   
+   /:/ /\  \     /:/\:\__\       /|  |     /:/\:\__\      \:\  \     /:/\:\  \        \:\  \                  
+  /:/ /::\  \   /:/ /:/  /      |:|  |    /:/ /:/  /  ___ /::\  \   /:/  \:\  \   _____\:\  \                 
+ /:/__\/\:\__\ /:/_/:/__/___    |:|  |   /:/_/:/  /  /\  /:/\:\__\ /:/__/ \:\__\ /::::::::\__\                
+ \:\  \ /:/  / \:\/:::::/  /  __|:|__|   \:\/:/  /   \:\/:/  \/__/ \:\  \ /:/  / \:\~~\~~\/__/                
+  \:\  /:/  /   \::/~~/~~~~  /::::\  \    \::/__/     \::/__/       \:\  /:/  /   \:\  \                      
+   \:\/:/  /     \:\~~\      ~~~~\:\  \    \:\  \      \:\  \        \:\/:/  /     \:\  \                     
+    \::/  /       \:\__\          \:\__\    \:\__\      \:\__\        \::/  /       \:\__\                    
+     \/__/         \/__/           \/__/     \/__/       \/__/         \/__/         \/__/                    
+      ___           ___                         ___                                     ___           ___     
+     /\  \         /\  \         _____         /\  \                                   /\__\         /\__\    
+    /::\  \       /::\  \       /::\  \       /::\  \         ___         ___         /:/  /        /:/ _/_   
+   /:/\:\__\     /:/\:\  \     /:/\:\  \     /:/\:\  \       /\__\       /\__\       /:/  /        /:/ /\  \  
+  /:/ /:/  /    /:/  \:\  \   /:/ /::\__\   /:/  \:\  \     /:/  /      /:/__/      /:/  /  ___   /:/ /::\  \ 
+ /:/_/:/__/___ /:/__/ \:\__\ /:/_/:/\:|__| /:/__/ \:\__\   /:/__/      /::\  \     /:/__/  /\__\ /:/_/:/\:\__\ 
+ \:\/:::::/  / \:\  \ /:/  / \:\/:/ /:/  / \:\  \ /:/  /  /::\  \      \/\:\  \__  \:\  \ /:/  / \:\/:/ /:/  /
+  \::/~~/~~~~   \:\  /:/  /   \::/_/:/  /   \:\  /:/  /  /:/\:\  \      ~~\:\/\__\  \:\  /:/  /   \::/ /:/  / 
+   \:\~~\        \:\/:/  /     \:\/:/  /     \:\/:/  /   \/__\:\  \        \::/  /   \:\/:/  /     \/_/:/  /  
+    \:\__\        \::/  /       \::/  /       \::/  /         \:\__\       /:/  /     \::/  /        /:/  /   
+     \/__/         \/__/         \/__/         \/__/           \/__/       \/__/       \/__/         \/__/    
 '''
 
 import wpilib
-import logging
-from math import *
-from wpilib.drive import DifferentialDrive
-from networktables import NetworkTables
-from ctre import *
-from sensors import REV_Color_Sensor_V2
+from math import fabs
 
 
 class Gemini(wpilib.TimedRobot):
 
+    def __init__(self):
+        """ Initialization of internal class variables and software-bases only """
+
+        super().__init__()
+
+        # global button status list construction
+        self.buttonToggleStatus = [False, False, False, False, False, False, False]
+
+        from networktables import NetworkTables
+        import logging
+
+        # connection for logging & Smart Dashboard
+        logging.basicConfig(level=logging.DEBUG)
+        self.sd = NetworkTables.getTable('SmartDashboard')
+        NetworkTables.initialize(server='10.55.49.2')
+        self.sd.putString("  ", "Connection")
+
     def robotInit(self):
-        ''' Initialization of robot objects. '''
+        ''' Initialization of robot systems. '''
+
+        from wpilib.drive import DifferentialDrive
+        from ctre import WPI_TalonSRX, WPI_VictorSPX
 
         # drive train motors
         self.frontRightMotor = WPI_TalonSRX(4)
@@ -56,9 +115,6 @@ class Gemini(wpilib.TimedRobot):
         self.xbox = wpilib.Joystick(2)
         self.buttonBox = wpilib.Joystick(3)
 
-        # global button status list construction
-        self.buttonStatus = [False, False, False, False, False, False, False]
-
         # pneumatic and compressor system initialization
         self.Compressor = wpilib.Compressor(0)
         self.Compressor.setClosedLoopControl(True)
@@ -68,13 +124,7 @@ class Gemini(wpilib.TimedRobot):
         self.DoubleSolenoidThree = wpilib.DoubleSolenoid(4, 5)  # hatch panel ejection
         self.Compressor.start()
 
-        # connection for logging & Smart Dashboard
-        logging.basicConfig(level=logging.DEBUG)
-        self.sd = NetworkTables.getTable('SmartDashboard')
-        NetworkTables.initialize(server='10.55.49.2')
-        self.sd.putString("  ", "Connection")
-
-        # Smart Dashboard and NetwrokTables initialization and construction
+        # Smart Dashboard and NetworkTables initialization and construction
         self.PDP = wpilib.PowerDistributionPanel()
         self.roboController = wpilib.RobotController()
         self.DS = wpilib.DriverStation.getInstance()
@@ -92,14 +142,15 @@ class Gemini(wpilib.TimedRobot):
         self.sd.putString("", "Top Camera")
         self.sd.putString(" ", "Bottom Camera")
 
+        from sensors import REV_Color_Sensor_V2
+
         # Initialization and configuration of I2C interface with color sensor.
         self.colorSensor = REV_Color_Sensor_V2(wpilib.I2C.Port.kOnboard)
-
 
     def autonomousInit(self):
         ''' Executed each time the robot enters autonomous. '''
 
-        # timer config
+        # pre-auto timer configuration
         self.timer.reset()
         self.timer.start()
 
@@ -111,221 +162,215 @@ class Gemini(wpilib.TimedRobot):
 
     def autonomousPeriodic(self):
         '''' Called periodically during autonomous. '''
-        
-        # Test Methods
-        def encoder_test():
-            # Drives robot set encoder distance away
-            self.rightPos = fabs(self.frontRightMotor.getQuadraturePosition())
-            self.leftPos = fabs(self.frontLeftMotor.getQuadraturePosition())
-            self.distIn = (((self.leftPos + self.rightPos) / 2) / 4096) * 18.84955
-            if 0 <= self.distIn <= 72:
-                self.drive.tankDrive(0.5, 0.5)
+
+        if self.DS.getGameSpecificMessage():
+            # Test Methods
+            if self.DS.getGameSpecificMessage() is 'encoder_test':
+
+                # Drives robot set encoder distance away
+                self.rightPos = fabs(self.frontRightMotor.getQuadraturePosition())
+                self.leftPos = fabs(self.frontLeftMotor.getQuadraturePosition())
+                self.distIn = (((self.leftPos + self.rightPos) / 2) / 4096) * 18.84955
+                if 0 <= self.distIn <= 72:
+                    self.drive.tankDrive(0.5, 0.5)
+                else:
+                    self.drive.tankDrive(0, 0)
+
+            if self.DS.getGameSpecificMessage() is 'diagnostics':
+
+                # Smart Dashboard Tests
+                self.sd.putNumber("Temperature: ", self.PDP.getTemperature())
+                self.sd.putNumber("Battery Voltage: ", self.roboController.getBatteryVoltage())
+                self.sd.putBoolean(" Browned Out?", self.roboController.isBrownedOut)
+
+                # Smart Dashboard diagnostics
+                self.sd.putNumber("Right Encoder Speed: ", abs(self.frontRightMotor.getQuadratureVelocity()))
+                self.sd.putNumber("Left Encoder Speed: ", abs(self.frontLeftMotor.getQuadratureVelocity()))
+                self.sd.putNumber("Lift Encoder: ", self.liftEncoder.getDistance())
+
+            if self.DS.getGameSpecificMessage() is 'pressure':
+                self.Compressor.start()
+            elif self.Compressor.enabled() is True:
+                self.Compressor.stop()
+
+        if not self.DS.getGameSpecificMessage() is 'pressure' and not self.DS.getGameSpecificMessage() is 'encoder_test':
+            # begin normal periodic
+
+            # get all required data once per frame
+            # toggle button management per frame
+            if self.buttonBox.getRawButtonPressed(1):
+                self.buttonToggleStatus = [not self.buttonToggleStatus[0], False, False, False, False, False, False]
+            elif self.buttonBox.getRawButtonPressed(2):
+                self.buttonToggleStatus = [False, not self.buttonToggleStatus[0], False, False, False, False, False]
+            elif self.buttonBox.getRawButtonPressed(3):
+                self.buttonToggleStatus = [False, False, not self.buttonToggleStatus[0], False, False, False, False]
+            elif self.buttonBox.getRawButtonPressed(4):
+                self.buttonToggleStatus = [False, False, False, not self.buttonToggleStatus[0], False, False, False]
+            elif self.buttonBox.getRawButtonPressed(5):
+                self.buttonToggleStatus = [False, False, False, False, not self.buttonToggleStatus[0], False, False]
+            elif self.buttonBox.getRawButtonPressed(6):
+                self.buttonToggleStatus = [False, False, False, False, False, not self.buttonToggleStatus[0], False]
+            elif self.buttonBox.getRawButtonPressed(7):
+                self.buttonToggleStatus = [False, False, False, False, False, False, not self.buttonToggleStatus[0]]
+
+            liftTicks = self.liftEncoder.get()
+            hallState = self.Hall.get()
+            compressorState = self.Compressor.enabled()
+            solenoidStateOne = self.DoubleSolenoidOne.get()
+            solenoidStateTwo = self.DoubleSolenoidTwo.get()
+            solenoidStateThree = self.DoubleSolenoidThree.get()
+
+            # robot ultrasonic
+            self.ultraValue = self.ultrasonic.getVoltage()
+
+            # cargo ultrasonic
+            self.cargoUltraValue = self.cargoUltrasonic.getVoltage()
+
+            # xbox value states
+            xboxButtonStates = [self.xbox.getRawButton(1), self.xbox.getRawButton(2), self.xbox.getRawButton(3), self.xbox.getRawButton(4), self.xbox.getRawButton(5), self.xbox.getRawButton(6), self.xbox.getRawButton(7), self.xbox.getRawButton(8), self.xbox.getRawButton(9), self.xbox.getRawButton(10)]
+            xboxAxisStates = [self.xbox.getRawAxis(1), self.xbox.getRawAxis(2), self.xbox.getRawAxis(3), self.xbox.getRawAxis(4), self.xbox.getRawAxis(5)]
+
+            # joystick value states
+            rJoystickButtonStates = [self.rightStick.getRawButton(1)]
+            rJoystickAxisStates = [self.rightStick.getRawAxis(1), self.rightStick.getRawAxis(2), self.rightStick.getRawAxis(3)]
+            lJoystickButtonStates = [self.leftStick.getRawButton(1)]
+            lJoystickAxisStates = [self.leftStick.getRawAxis(1), self.leftStick.getRawAxis(2), self.leftStick.getRawAxis(3)]
+
+            # define lift stages
+            def cargoOne():
+                if liftTicks <= 133:  # Cargo 1
+                    self.lift.set(0.5)
+                elif liftTicks > 133:
+                    self.lift.set(0.05)
+
+            def cargoTwo():
+                if liftTicks <= 270:   # Cargo 2
+                    self.lift.set(0.5)
+                elif liftTicks > 270:
+                    self.lift.set(0.05)
+
+            def cargoThree():
+                if liftTicks <= 415:   # Cargo 3
+                    self.lift.set(0.5)
+                elif liftTicks > 415:
+                    self.lift.set(0.05)
+
+            def hatchOne():
+                if liftTicks <= 96:    # Hatch 1
+                    self.lift.set(0.5)
+                elif liftTicks > 96:
+                    self.lift.set(0.05)
+
+            def hatchTwo():
+                if liftTicks <= 237:   # Hatch 2
+                    self.lift.set(0.5)
+                elif liftTicks > 237:
+                    self.lift.set(0.05)
+
+            def hatchThree():
+                if liftTicks <= 378:   # Hatch 3
+                    self.lift.set(0.5)
+                elif liftTicks > 378:
+                    self.lift.set(0.05)
+
+            def liftEncoderReset():
+                self.lift.set(0.01)
+                if hallState is True:
+                    self.liftEncoder.reset()
+
+            if self.buttonToggleStatus[0] is True:
+                cargoThree()
+            elif self.buttonToggleStatus[1] is True:
+                hatchThree()
+            elif self.buttonToggleStatus[2] is True:
+                cargoTwo()
+            elif self.buttonToggleStatus[3] is True:
+                hatchTwo()
+            elif self.buttonToggleStatus[4] is True:
+                cargoOne()
+            elif self.buttonToggleStatus[5] is True:
+                hatchOne()
+            elif self.buttonToggleStatus[6] is True:
+                liftEncoderReset()
+
+            # compressor state
+            self.sd.putString("Compressor Status: ", "Enabled" if compressorState is True else "Disabled")
+
+            # gear state
+            self.sd.putString("Gear Shift: ", "High Speed" if solenoidStateOne is 1 else "Low Speed")
+
+            # ejector state
+            self.sd.putString("Ejector Pins: ", "Ejected" if solenoidStateThree is 2 else "Retracted")
+
+            # claw state
+            self.sd.putString("Claw: ", "Open" if solenoidStateTwo is 2 else "Closed")
+
+            # hatch station range state
+            self.sd.putString("PLAYER STATION RANGE: ", "YES!!!!" if 0.142 <= self.ultraValue <= 0.146 else "NO!")
+            #self.sd.putNumber("Ultrasonic Voltage: ", self.ultraValue)
+
+            # hatch spaceship range
+            self.sd.putString("HATCH RANGE: ", "HATCH IN RANGE" if 0.7 <= self.cargoUltraValue <= 1.56 else "NOT IN RANGE")
+
+            # compressor
+            if xboxButtonStates[8]:
+                self.Compressor.stop()
+            elif xboxButtonStates[9]:
+                self.Compressor.start()
+            elif rJoystickButtonStates[0]:  # shift right
+                self.DoubleSolenoidOne.set(wpilib.DoubleSolenoid.Value.kForward)
+            elif lJoystickButtonStates[0]:  # shift left
+                self.DoubleSolenoidOne.set(wpilib.DoubleSolenoid.Value.kReverse)
+            elif xboxButtonStates[2]:  # open claw
+                self.DoubleSolenoidTwo.set(wpilib.DoubleSolenoid.Value.kForward)
+            elif xboxButtonStates[1]:  # close claw
+                self.DoubleSolenoidTwo.set(wpilib.DoubleSolenoid.Value.kReverse)
+            elif xboxButtonStates[3]:  # eject
+                self.DoubleSolenoidThree.set(wpilib.DoubleSolenoid.Value.kForward)
+            elif xboxButtonStates[0]:  # retract
+                self.DoubleSolenoidThree.set(wpilib.DoubleSolenoid.Value.kReverse)
+
+            # lift control
+            if True in self.buttonToggleStatus is False:
+                if xboxButtonStates[4]:  # hold
+                    self.lift.set(0.05)
+                elif xboxAxisStates[2]:  # up
+                    self.lift.set(xboxAxisStates[2] / 1.5)
+                elif xboxAxisStates[1]:  # down
+                    self.lift.set(-xboxAxisStates[1] * 0.25)
+                else:
+                    self.lift.set(0)
+
+            # four-bar control
+            if xboxButtonStates[5]:
+               self.liftArm.set(0.05)
+            elif not xboxButtonStates[5]:
+                self.liftArm.set(-xboxAxisStates[0] / 4.0)
             else:
-                self.drive.tankDrive(0, 0)
+                self.liftArm.set(0)
 
-        def Diagnostics():
-            # Smart Dashboard Tests
-            self.sd.putNumber("Temperature: ", self.PDP.getTemperature())
-            self.sd.putNumber("Battery Voltage: ", self.roboController.getBatteryVoltage())
-            self.sd.putBoolean(" Browned Out?", self.roboController.isBrownedOut)
+            # cargo intake control
+            if xboxButtonStates[6]:
+                self.cargo.set(0.12)
+            elif xboxAxisStates[4]:  # take in
+                self.cargo.set(xboxAxisStates[4] *0.75)
 
-            # Smart Dashboard diagnostics
-            self.sd.putNumber("Right Encoder Speed: ", abs(self.frontRightMotor.getQuadratureVelocity()))
-            self.sd.putNumber("Left Encoder Speed: ", abs(self.frontLeftMotor.getQuadratureVelocity()))
-            self.sd.putNumber("Lift Encoder: ", self.liftEncoder.getDistance())
+            # controller mapping for tank steering
+            rightAxis = rJoystickAxisStates[0]
+            leftAxis = lJoystickAxisStates[0]
 
-        def Pressure():
-            self.Compressor.start()
-
-        # begin normal periodic
-        def cargoOne():
-            if self.liftEncoder.get() <= 133:  # Cargo 1
-                self.lift.set(0.5)
-            elif self.liftEncoder.get() > 133:
-                self.lift.set(0.05)
-                self.buttonStatus[4] = False
-
-        def cargoTwo():
-            if self.liftEncoder.get() <= 270:   # Cargo 2
-                self.lift.set(0.5)
-            elif self.liftEncoder.get() > 270:
-                self.lift.set(0.05)
-                self.buttonStatus[2] = False
-
-        def cargoThree():
-            if self.liftEncoder.get() <= 415:   # Cargo 3
-                self.lift.set(0.5)
-            elif self.liftEncoder.get() > 415:
-                self.lift.set(0.05)
-                self.buttonStatus[0] = False
-
-        def hatchOne():
-            if self.liftEncoder.get() <= 96:    # Hatch 1
-                self.lift.set(0.5)
-            elif self.liftEncoder.get() > 96:
-                self.lift.set(0.05)
-                self.buttonStatus[5] = False
-
-        def hatchTwo():
-            if self.liftEncoder.get() <= 237:   # Hatch 2
-                self.lift.set(0.5)
-            elif self.liftEncoder.get() > 237:
-                self.lift.set(0.05)
-                self.buttonStatus[3] = False
-
-        def hatchThree():
-            if self.liftEncoder.get() <= 378:   # Hatch 3
-                self.lift.set(0.5)
-            elif self.liftEncoder.get() > 378:
-                self.lift.set(0.05)
-                self.buttonStatus[1] = False
-
-        def liftEncoderReset():
-            self.lift.set(0.01)
-            if self.Hall.get() is True:
-                self.liftEncoder.reset()
-
-        if self.buttonBox.getRawButtonPressed(1):
-            self.buttonStatus[0] = not self.buttonStatus[0]
-        elif self.buttonBox.getRawButtonPressed(2):
-            self.buttonStatus[1] = not self.buttonStatus[1]
-        elif self.buttonBox.getRawButtonPressed(3):
-            self.buttonStatus[2] = not self.buttonStatus[2]
-        elif self.buttonBox.getRawButtonPressed(4):
-            self.buttonStatus[3] = not self.buttonStatus[3]
-        elif self.buttonBox.getRawButtonPressed(5):
-            self.buttonStatus[4] = not self.buttonStatus[4]
-        elif self.buttonBox.getRawButtonPressed(6):
-            self.buttonStatus[5] = not self.buttonStatus[5]
-        elif self.buttonBox.getRawButtonPressed(7):
-            self.buttonStatus[6] = not self.buttonStatus[6]
-
-        if self.buttonStatus[0] is True:
-            cargoThree()
-        elif self.buttonStatus[1] is True:
-            hatchThree()
-        elif self.buttonStatus[2] is True:
-            cargoTwo()
-        elif self.buttonStatus[3] is True:
-            hatchTwo()
-        elif self.buttonStatus[4] is True:
-            cargoOne()
-        elif self.buttonStatus[5] is True:
-            hatchOne()
-        elif self.buttonStatus[6] is True:
-            liftEncoderReset()
-
-        if self.DS.getGameSpecificMessage() == "pressure":
-            Pressure()
-        elif self.DS.getGameSpecificMessage() == "diagnostics":
-            Diagnostics()
-
-        # compressor state
-        if self.Compressor.enabled() is True:
-            self.sd.putString("Compressor Status: ", "Enabled")
-        elif self.Compressor.enabled() is False:
-            self.sd.putString("Compressor Status: ", "Disabled")
-
-        # gear state
-        if self.DoubleSolenoidOne.get() == 1:
-            self.sd.putString("Gear Shift: ", "High Speed")
-        elif self.DoubleSolenoidOne.get() == 2:
-            self.sd.putString("Gear Shift: ", "Low Speed")
-
-        # ejector state
-        if self.DoubleSolenoidThree.get() == 2:
-            self.sd.putString("Ejector Pins: ", "Ejected")
-        elif self.DoubleSolenoidThree.get() == 1:
-            self.sd.putString("Ejector Pins: ", "Retracted")
-
-        # claw state
-        if self.DoubleSolenoidTwo.get() == 2:
-            self.sd.putString("Claw: ", "Open")
-        elif self.DoubleSolenoidTwo.get() == 1:
-            self.sd.putString("Claw: ", "Closed")
-            
-        # robot ultrasonic
-        self.ultraValue = self.ultrasonic.getVoltage()
-        if 0.142 <= self.ultraValue <= 0.146:
-            self.sd.putString("PLAYER STATION RANGE: ", "YES!!!!")
-        else:
-            self.sd.putString("PLAYER STATION RANGE: ", "NO!")
-
-        #self.sd.putNumber("Ultrasonic Voltage: ", self.ultraValue)
-
-        # cargo ultrasonic
-        self.cargoUltraValue = self.cargoUltrasonic.getVoltage()
-
-        if 0.70 <= self.cargoUltraValue <= 1.56:
-            self.sd.putString("HATCH RANGE: ", "HATCH IN RANGE")
-        else:
-            self.sd.putString("HATCH RANGE: ", "NOT IN RANGE")
-            
-        # compressor
-        if self.xbox.getRawButton(9):
-            self.Compressor.stop()
-        elif self.xbox.getRawButton(10):
-            self.Compressor.start()
-        elif self.rightStick.getRawButton(1):  # shift right
-            self.DoubleSolenoidOne.set(wpilib.DoubleSolenoid.Value.kForward)
-        elif self.leftStick.getRawButton(1):  # shift left
-            self.DoubleSolenoidOne.set(wpilib.DoubleSolenoid.Value.kReverse)
-        elif self.xbox.getRawButton(3):  # open claw
-            self.DoubleSolenoidTwo.set(wpilib.DoubleSolenoid.Value.kForward)
-        elif self.xbox.getRawButton(2):  # close claw
-            self.DoubleSolenoidTwo.set(wpilib.DoubleSolenoid.Value.kReverse)
-        elif self.xbox.getRawButton(4):  # eject
-            self.DoubleSolenoidThree.set(wpilib.DoubleSolenoid.Value.kForward)
-        elif self.xbox.getRawButton(1):  # retract
-            self.DoubleSolenoidThree.set(wpilib.DoubleSolenoid.Value.kReverse)
-
-        # lift control
-        if True in self.buttonStatus is False:
-            if self.xbox.getRawButton(5):  # hold
-                self.lift.set(0.05)
-            elif self.xbox.getRawAxis(3):  # up
-                self.lift.set(self.xbox.getRawAxis(3) / 1.5)
-            elif self.xbox.getRawAxis(2):  # down
-                self.lift.set(-self.xbox.getRawAxis(2) * 0.25)
+            # drives drive system using tank steering
+            if solenoidStateOne is 1:  # if on high gear
+                divisor = 1.2  # then 90% of high speed
+            elif solenoidStateOne is 2:  # if on low gear
+                divisor = 1.2  # then normal slow speed
             else:
-                self.lift.set(0)
+                divisor = 1.0
 
-        # four-bar control
-        if self.xbox.getRawButton(6):
-           self.liftArm.set(0.05)
-        elif not self.xbox.getRawButton(6):
-            self.liftArm.set(-self.xbox.getRawAxis(1) / 4.0)
-        else:
-            self.liftArm.set(0)
+            leftSign = leftAxis / fabs(leftAxis) if leftAxis != 0 else 0
+            rightSign = rightAxis / fabs(rightAxis) if rightAxis != 0 else 0
 
-        # cargo intake control
-        if self.xbox.getRawButton(7):
-            self.cargo.set(0.12)
-        elif self.xbox.getRawAxis(5):  # take in
-            self.cargo.set(self.xbox.getRawAxis(5) *0.75)
-
-        # controller mapping for tank steering
-        rightAxis = self.rightStick.getRawAxis(1)
-        leftAxis = self.leftStick.getRawAxis(1)
-
-        # drives drive system using tank steering
-        if self.DoubleSolenoidOne.get() == 1:  # if on high gear
-            self.divisor = 1.2  # 90% of high speed
-        elif self.DoubleSolenoidOne.get() == 2:  # if on low gear
-            self.divisor = 1.2  # normal slow speed
-        else:
-            self.divisor = 1.0
-
-        if leftAxis != 0:
-            self.leftSign = leftAxis / fabs(leftAxis)
-        else:
-            self.leftSign = 0
-        if rightAxis != 0:
-            self.rightSign = rightAxis / fabs(rightAxis)
-        else:
-            self.rightSign = 0
-
-        self.drive.tankDrive(-(self.leftSign)*(1 / self.divisor)*(leftAxis ** 2), -(self.rightSign)*(1 / self.divisor)*(rightAxis ** 2))
+            self.drive.tankDrive(-(leftSign) * (1 / divisor) * (leftAxis ** 2), -(rightSign) * (1 / divisor) * (rightAxis ** 2))
 
     def teleopInit(self):
         ''' Executed at the start of teleop mode. '''
@@ -345,189 +390,183 @@ class Gemini(wpilib.TimedRobot):
     def teleopPeriodic(self):
         ''' Periodically executes methods during the teleop mode. '''
 
-        def cargoOne():
-            if self.liftEncoder.get() <= 133:  # Cargo 1
-                self.lift.set(0.5)
-            elif self.liftEncoder.get() > 133:
-                self.lift.set(0.05)
-                self.buttonStatus[4] = False
+        # begin normal periodic
 
-        def cargoTwo():
-            if self.liftEncoder.get() <= 270:   # Cargo 2
-                self.lift.set(0.5)
-            elif self.liftEncoder.get() > 270:
-                self.lift.set(0.05)
-                self.buttonStatus[2] = False
-
-        def cargoThree():
-            if self.liftEncoder.get() <= 415:   # Cargo 3
-                self.lift.set(0.5)
-            elif self.liftEncoder.get() > 415:
-                self.lift.set(0.05)
-                self.buttonStatus[0] = False
-
-        def hatchOne():
-            if self.liftEncoder.get() <= 96:    # Hatch 1
-                self.lift.set(0.5)
-            elif self.liftEncoder.get() > 96:
-                self.lift.set(0.05)
-                self.buttonStatus[5] = False
-
-        def hatchTwo():
-            if self.liftEncoder.get() <= 237:   # Hatch 2
-                self.lift.set(0.5)
-            elif self.liftEncoder.get() > 237:
-                self.lift.set(0.05)
-                self.buttonStatus[3] = False
-
-        def hatchThree():
-            if self.liftEncoder.get() <= 378:   # Hatch 3
-                self.lift.set(0.5)
-            elif self.liftEncoder.get() > 378:
-                self.lift.set(0.05)
-                self.buttonStatus[1] = False
-
-        def liftEncoderReset():
-            self.lift.set(0.01)
-            if self.Hall.get() is True:
-                self.liftEncoder.reset()
-
+        # get all required data once per frame
+        # toggle button management per frame
         if self.buttonBox.getRawButtonPressed(1):
-            self.buttonStatus[0] = not self.buttonStatus[0]
+            self.buttonToggleStatus = [not self.buttonToggleStatus[0], False, False, False, False, False, False]
         elif self.buttonBox.getRawButtonPressed(2):
-            self.buttonStatus[1] = not self.buttonStatus[1]
+            self.buttonToggleStatus = [False, not self.buttonToggleStatus[0], False, False, False, False, False]
         elif self.buttonBox.getRawButtonPressed(3):
-            self.buttonStatus[2] = not self.buttonStatus[2]
+            self.buttonToggleStatus = [False, False, not self.buttonToggleStatus[0], False, False, False, False]
         elif self.buttonBox.getRawButtonPressed(4):
-            self.buttonStatus[3] = not self.buttonStatus[3]
+            self.buttonToggleStatus = [False, False, False, not self.buttonToggleStatus[0], False, False, False]
         elif self.buttonBox.getRawButtonPressed(5):
-            self.buttonStatus[4] = not self.buttonStatus[4]
+            self.buttonToggleStatus = [False, False, False, False, not self.buttonToggleStatus[0], False, False]
         elif self.buttonBox.getRawButtonPressed(6):
-            self.buttonStatus[5] = not self.buttonStatus[5]
+            self.buttonToggleStatus = [False, False, False, False, False, not self.buttonToggleStatus[0], False]
         elif self.buttonBox.getRawButtonPressed(7):
-            self.buttonStatus[6] = not self.buttonStatus[6]
+            self.buttonToggleStatus = [False, False, False, False, False, False, not self.buttonToggleStatus[0]]
 
-        if self.buttonStatus[0] is True:
-            cargoThree()
-        elif self.buttonStatus[1] is True:
-            hatchThree()
-        elif self.buttonStatus[2] is True:
-            cargoTwo()
-        elif self.buttonStatus[3] is True:
-            hatchTwo()
-        elif self.buttonStatus[4] is True:
-            cargoOne()
-        elif self.buttonStatus[5] is True:
-            hatchOne()
-        elif self.buttonStatus[6] is True:
-            liftEncoderReset()
-
-        # compressor state
-        if self.Compressor.enabled() is True:
-            self.sd.putString("Compressor Status: ", "Enabled")
-        elif self.Compressor.enabled() is False:
-            self.sd.putString("Compressor Status: ", "Disabled")
-
-        # gear state
-        if self.DoubleSolenoidOne.get() == 1:
-            self.sd.putString("Gear Shift: ", "High Speed")
-        elif self.DoubleSolenoidOne.get() == 2:
-            self.sd.putString("Gear Shift: ", "Low Speed")
-
-        # ejector state
-        if self.DoubleSolenoidThree.get() == 2:
-            self.sd.putString("Ejector Pins: ", "Ejected")
-        elif self.DoubleSolenoidThree.get() == 1:
-            self.sd.putString("Ejector Pins: ", "Retracted")
-
-        # claw state
-        if self.DoubleSolenoidTwo.get() == 2:
-            self.sd.putString("Claw: ", "Open")
-        elif self.DoubleSolenoidTwo.get() == 1:
-            self.sd.putString("Claw: ", "Closed")
+        liftTicks = self.liftEncoder.get()
+        hallState = self.Hall.get()
+        compressorState = self.Compressor.enabled()
+        solenoidStateOne = self.DoubleSolenoidOne.get()
+        solenoidStateTwo = self.DoubleSolenoidTwo.get()
+        solenoidStateThree = self.DoubleSolenoidThree.get()
 
         # robot ultrasonic
         self.ultraValue = self.ultrasonic.getVoltage()
-        if 0.142 <= self.ultraValue <= 0.146:
-            self.sd.putString("PLAYER STATION RANGE: ", "YES!!!!")
-        else:
-            self.sd.putString("PLAYER STATION RANGE: ", "NO!")
-
-        #self.sd.putNumber("Ultrasonic Voltage: ", self.ultraValue)
 
         # cargo ultrasonic
         self.cargoUltraValue = self.cargoUltrasonic.getVoltage()
 
-        if 0.70 <= self.cargoUltraValue <= 1.56:
-            self.sd.putString("HATCH RANGE: ", "HATCH IN RANGE")
-        else:
-            self.sd.putString("HATCH RANGE: ", "NOT IN RANGE")
+        # xbox value states
+        xboxButtonStates = [self.xbox.getRawButton(1), self.xbox.getRawButton(2), self.xbox.getRawButton(3), self.xbox.getRawButton(4), self.xbox.getRawButton(5), self.xbox.getRawButton(6), self.xbox.getRawButton(7), self.xbox.getRawButton(8), self.xbox.getRawButton(9), self.xbox.getRawButton(10)]
+        xboxAxisStates = [self.xbox.getRawAxis(1), self.xbox.getRawAxis(2), self.xbox.getRawAxis(3), self.xbox.getRawAxis(4), self.xbox.getRawAxis(5)]
+
+        # joystick value states
+        rJoystickButtonStates = [self.rightStick.getRawButton(1)]
+        rJoystickAxisStates = [self.rightStick.getRawAxis(1), self.rightStick.getRawAxis(2), self.rightStick.getRawAxis(3)]
+        lJoystickButtonStates = [self.leftStick.getRawButton(1)]
+        lJoystickAxisStates = [self.leftStick.getRawAxis(1), self.leftStick.getRawAxis(2), self.leftStick.getRawAxis(3)]
+
+        # define lift stages
+        def cargoOne():
+            if liftTicks <= 133:  # Cargo 1
+                self.lift.set(0.5)
+            elif liftTicks > 133:
+                self.lift.set(0.05)
+
+        def cargoTwo():
+            if liftTicks <= 270:  # Cargo 2
+                self.lift.set(0.5)
+            elif liftTicks > 270:
+                self.lift.set(0.05)
+
+        def cargoThree():
+            if liftTicks <= 415:  # Cargo 3
+                self.lift.set(0.5)
+            elif liftTicks > 415:
+                self.lift.set(0.05)
+
+        def hatchOne():
+            if liftTicks <= 96:  # Hatch 1
+                self.lift.set(0.5)
+            elif liftTicks > 96:
+                self.lift.set(0.05)
+
+        def hatchTwo():
+            if liftTicks <= 237:  # Hatch 2
+                self.lift.set(0.5)
+            elif liftTicks > 237:
+                self.lift.set(0.05)
+
+        def hatchThree():
+            if liftTicks <= 378:  # Hatch 3
+                self.lift.set(0.5)
+            elif liftTicks > 378:
+                self.lift.set(0.05)
+
+        def liftEncoderReset():
+            self.lift.set(0.01)
+            if hallState is True:
+                self.liftEncoder.reset()
+
+        if self.buttonToggleStatus[0] is True:
+            cargoThree()
+        elif self.buttonToggleStatus[1] is True:
+            hatchThree()
+        elif self.buttonToggleStatus[2] is True:
+            cargoTwo()
+        elif self.buttonToggleStatus[3] is True:
+            hatchTwo()
+        elif self.buttonToggleStatus[4] is True:
+            cargoOne()
+        elif self.buttonToggleStatus[5] is True:
+            hatchOne()
+        elif self.buttonToggleStatus[6] is True:
+            liftEncoderReset()
+
+        # compressor state
+        self.sd.putString("Compressor Status: ", "Enabled" if compressorState is True else "Disabled")
+
+        # gear state
+        self.sd.putString("Gear Shift: ", "High Speed" if solenoidStateOne is 1 else "Low Speed")
+
+        # ejector state
+        self.sd.putString("Ejector Pins: ", "Ejected" if solenoidStateThree is 2 else "Retracted")
+
+        # claw state
+        self.sd.putString("Claw: ", "Open" if solenoidStateTwo is 2 else "Closed")
+
+        # hatch station range state
+        self.sd.putString("PLAYER STATION RANGE: ", "YES!!!!" if 0.142 <= self.ultraValue <= 0.146 else "NO!")
+        # self.sd.putNumber("Ultrasonic Voltage: ", self.ultraValue)
+
+        # hatch spaceship range
+        self.sd.putString("HATCH RANGE: ", "HATCH IN RANGE" if 0.7 <= self.cargoUltraValue <= 1.56 else "NOT IN RANGE")
 
         # compressor
-        if self.xbox.getRawButton(9):
+        if xboxButtonStates[8]:
             self.Compressor.stop()
-        elif self.xbox.getRawButton(10):
+        elif xboxButtonStates[9]:
             self.Compressor.start()
-        elif self.rightStick.getRawButton(1):  # shift right
+        elif rJoystickButtonStates[0]:  # shift right
             self.DoubleSolenoidOne.set(wpilib.DoubleSolenoid.Value.kForward)
-        elif self.leftStick.getRawButton(1):  # shift left
+        elif lJoystickButtonStates[0]:  # shift left
             self.DoubleSolenoidOne.set(wpilib.DoubleSolenoid.Value.kReverse)
-        elif self.xbox.getRawButton(3):  # open claw
+        elif xboxButtonStates[2]:  # open claw
             self.DoubleSolenoidTwo.set(wpilib.DoubleSolenoid.Value.kForward)
-        elif self.xbox.getRawButton(2):  # close claw
+        elif xboxButtonStates[1]:  # close claw
             self.DoubleSolenoidTwo.set(wpilib.DoubleSolenoid.Value.kReverse)
-        elif self.xbox.getRawButton(4):  # eject
+        elif xboxButtonStates[3]:  # eject
             self.DoubleSolenoidThree.set(wpilib.DoubleSolenoid.Value.kForward)
-        elif self.xbox.getRawButton(1):  # retract
+        elif xboxButtonStates[0]:  # retract
             self.DoubleSolenoidThree.set(wpilib.DoubleSolenoid.Value.kReverse)
 
         # lift control
-        if True in self.buttonStatus is False:
-            if self.xbox.getRawButton(5):  # hold
+        if True in self.buttonToggleStatus is False:
+            if xboxButtonStates[4]:  # hold
                 self.lift.set(0.05)
-            elif self.xbox.getRawAxis(3):  # up
-                self.lift.set(self.xbox.getRawAxis(3) / 1.5)
-            elif self.xbox.getRawAxis(2):  # down
-                self.lift.set(-self.xbox.getRawAxis(2) * 0.25)
+            elif xboxAxisStates[2]:  # up
+                self.lift.set(xboxAxisStates[2] / 1.5)
+            elif xboxAxisStates[1]:  # down
+                self.lift.set(-xboxAxisStates[1] * 0.25)
             else:
                 self.lift.set(0)
 
         # four-bar control
-        if self.xbox.getRawButton(6):
-           self.liftArm.set(0.05)
-        elif not self.xbox.getRawButton(6):
-            self.liftArm.set(-self.xbox.getRawAxis(1) / 4.0)
+        if xboxButtonStates[5]:
+            self.liftArm.set(0.05)
+        elif not xboxButtonStates[5]:
+            self.liftArm.set(-xboxAxisStates[0] / 4.0)
         else:
             self.liftArm.set(0)
 
         # cargo intake control
-        if self.xbox.getRawButton(7):
+        if xboxButtonStates[6]:
             self.cargo.set(0.12)
-        elif self.xbox.getRawAxis(5):  # take in
-            self.cargo.set(self.xbox.getRawAxis(5) *0.75)
+        elif xboxAxisStates[4]:  # take in
+            self.cargo.set(xboxAxisStates[4] * 0.75)
 
         # controller mapping for tank steering
-        rightAxis = self.rightStick.getRawAxis(1)
-        leftAxis = self.leftStick.getRawAxis(1)
+        rightAxis = rJoystickAxisStates[0]
+        leftAxis = lJoystickAxisStates[0]
 
         # drives drive system using tank steering
-        if self.DoubleSolenoidOne.get() == 1:  # if on high gear
-            self.divisor = 1.2  # 90% of high speed
-        elif self.DoubleSolenoidOne.get() == 2:  # if on low gear
-            self.divisor = 1.2  # normal slow speed
+        if solenoidStateOne is 1:  # if on high gear
+            divisor = 1.2  # then 90% of high speed
+        elif solenoidStateOne is 2:  # if on low gear
+            divisor = 1.2  # then normal slow speed
         else:
-            self.divisor = 1.0
+            divisor = 1.0
 
-        if leftAxis != 0:
-            self.leftSign = leftAxis / fabs(leftAxis)
-        else:
-            self.leftSign = 0
-        if rightAxis != 0:
-            self.rightSign = rightAxis / fabs(rightAxis)
-        else:
-            self.rightSign = 0
+        leftSign = leftAxis / fabs(leftAxis) if leftAxis != 0 else 0
+        rightSign = rightAxis / fabs(rightAxis) if rightAxis != 0 else 0
 
-        self.drive.tankDrive(-(self.leftSign)*(1 / self.divisor)*(leftAxis ** 2), -(self.rightSign)*(1 / self.divisor)*(rightAxis ** 2))
+        self.drive.tankDrive(-(leftSign) * (1 / divisor) * (leftAxis ** 2), -(rightSign) * (1 / divisor) * (rightAxis ** 2))
 
 if __name__ == '__main__':
     wpilib.run(Gemini)
