@@ -53,7 +53,7 @@ class REV_Color_Sim(i2c_helpers.I2CSimBase):
         self.clear = 0
 
     def initializeI2C(self, port, status):
-        self.color_key = "rev_color_sensor_v2_%d_blue_color" % port
+        self.color_key = "rev_color_sensor_v2_%d_color" % port
 
     def transactionI2C(
         self, port, deviceAddress, dataToSend, sendSize, dataReceived, receiveSize
@@ -62,18 +62,23 @@ class REV_Color_Sim(i2c_helpers.I2CSimBase):
         sendSize = 0xFF
         receiveSize = 0xFF
         dataReceived[0] = 0xFF
+        port = wpilib.I2C.Port.kOnboard
 
         return 1
 
     def readI2C(self, port, deviceAddress, buffer, count):
         color = hal_data["robot"].get(self.color_key, 0)
-        buffer[0] = (0xFF).to_bytes(1, "big")
+        if count is 2:
+            buffer[1] = (0xFF).to_bytes(1, "big")
+            buffer[0] = (0xFF).to_bytes(1, "big")
+        elif count is 1:
+            buffer[0] = (0xFF).to_bytes(1, "big")
 
-        return 1
+        return count
 
 class REV_Color_Sensor_V2(ColorSensorBase):
 
-    address = 0x39
+    ADDRESS = 0x39
 
     def __init__(self, port: wpilib.I2C.Port = 0):
         super().__init__()
@@ -90,11 +95,7 @@ class REV_Color_Sensor_V2(ColorSensorBase):
         self.setName("REV_Robotics_Color_Sensor_V2", port)
 
     def enable(self) -> None:
-        self.i2c.write(0x03, 0xAB)
-        self.i2c.write(0x01, 0xC0)  # Set ATIME to 64 cycles.
-        self.i2c.write(0x0D, 0x02)  # Configure WLONG to influence WTIME
-        self.i2c.write(0x03, 0xFF)  # Configure WTIME register.
-        self.i2c.write(0x00, 0x0B)
+        self.i2c.write(0x00, 0x83)
 
     def getColor(self, addClear: bool = False) -> typing.List[int]:
         if addClear:
@@ -110,22 +111,22 @@ class REV_Color_Sensor_V2(ColorSensorBase):
         return color
 
     def getRed(self):
-        self.readRawRegister(0x16)
-        redReg = int.from_bytes(self.readRawRegister(0x17), byteorder="big")
-        return redReg
+        redRegLow = int.from_bytes(self.readRawRegister(0x80 | 0x20 | 0x16, 2), byteorder="big")
+        # redRegHigh = int.from_bytes(self.readRawRegister(0x17, 1), byteorder="big")
+        return redRegLow
 
     def getGreen(self):
-        self.readRawRegister(0x18)
-        greenReg = int.from_bytes(self.readRawRegister(0x19), byteorder="big")
-        return greenReg
+        greenRegLow = int.from_bytes(self.readRawRegister(0x80 | 0x20 | 0x18, 2), byteorder="big")
+        # greenRegHigh = int.from_bytes(self.readRawRegister(0x19, 1), byteorder="big")
+        return greenRegLow
 
     def getBlue(self):
-        self.readRawRegister(0x1a)
-        blueReg = int.from_bytes(self.readRawRegister(0x1b), byteorder="big")
-        return blueReg
+        blueRegLow = int.from_bytes(self.readRawRegister(0x80 | 0x20 | 0x1a, 2), byteorder="big")
+        # blueRegHigh = int.from_bytes(self.readRawRegister(0x1b, 1), byteorder="big")
+        return blueRegLow
 
-    def readRegister(self, register: int) -> int:
-        return int.from_bytes(self.i2c.read(register, 1), byteorder="big")
+    def readRegister(self, register: int, bytes: int) -> int:
+        return int.from_bytes(self.i2c.read(register, bytes), byteorder="big")
 
-    def readRawRegister(self, register: int) -> bytearray:
-        return self.i2c.read(register, 1)
+    def readRawRegister(self, register: int, bytes: int) -> bytearray:
+        return self.i2c.read(register, bytes)
