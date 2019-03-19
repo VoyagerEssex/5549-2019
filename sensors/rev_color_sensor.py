@@ -99,15 +99,17 @@ class REV_Color_Sensor_V2(ColorSensorBase):
 
     def getColor(self, addClear: bool = False) -> typing.List[int]:
         if addClear:
-            self.clearChannel = self.readRawRegister(0x15)[0]
-        self.readRegister(0x16)
-        self.redChannel = int.from_bytes(self.readRawRegister(0x17), byteorder="big")
-        self.readRegister(0x18)
-        self.greenChannel = int.from_bytes(self.readRawRegister(0x19), byteorder="big")
-        self.readRegister(0x1a)
-        self.blueChannel = int.from_bytes(self.readRawRegister(0x1b), byteorder="big")
-
-        color = [self.redChannel, self.greenChannel, self.blueChannel, self.clearChannel]
+            self.clearChannel = self.readRawRegister(0x80 | 0x20 | 0x14)[0]
+        self.redChannel = int.from_bytes(self.readRawRegister(0x80 | 0x20 | 0x16), byteorder="big")
+        self.greenChannel = int.from_bytes(self.readRawRegister(0x80 | 0x20 | 0x18), byteorder="big")
+        self.blueChannel = int.from_bytes(self.readRawRegister(0x80| 0x20| 0x1a), byteorder="big")
+        
+        color = [None] * 3
+        if addClear:
+            color = [self.redChannel, self.greenChannel, self.blueChannel]
+            color.append(self.clearChannel)
+        else:
+            color = [self.redChannel, self.greenChannel, self.blueChannel, self.clearChannel]
         return color
 
     def getRed(self):
