@@ -20,7 +20,7 @@ Destination: Deep Space 2019 - GEMINI from Gryphon Robotics
  |_____] |_____| |_____/ |______   |   |_____|
  |       |     | |    \_ ______| __|__ |     |
 
-Leading programming affiliates of:
+Leading programming affiliate members of:
 
       ___           ___                       ___         ___           ___           ___                     
      /\__\         /\  \                     /\  \       /\  \         /\  \         /\  \                    
@@ -48,7 +48,7 @@ Leading programming affiliates of:
 
 import wpilib
 from math import fabs
-
+import logging
 
 class Gemini(wpilib.TimedRobot):
 
@@ -61,16 +61,16 @@ class Gemini(wpilib.TimedRobot):
         self.buttonToggleStatus = [False, False, False, False, False, False, False]
 
         from networktables import NetworkTables
-        import logging
 
         # connection for logging & Smart Dashboard
-        logging.basicConfig(level=logging.DEBUG)
         self.sd = NetworkTables.getTable('SmartDashboard')
         NetworkTables.initialize(server='10.55.49.2')
         self.sd.putString("  ", "Connection")
 
     def robotInit(self):
         ''' Initialization of robot systems. '''
+
+        logging.info('-( ͡° ͜ʖ ͡°)╯╲_-^o=o\ \"Don\'t mind me, just walking the robot.\"')
 
         from wpilib.drive import DifferentialDrive
         from ctre import WPI_TalonSRX, WPI_VictorSPX
@@ -201,17 +201,17 @@ class Gemini(wpilib.TimedRobot):
             if self.buttonBox.getRawButtonPressed(1):
                 self.buttonToggleStatus = [not self.buttonToggleStatus[0], False, False, False, False, False, False]
             elif self.buttonBox.getRawButtonPressed(2):
-                self.buttonToggleStatus = [False, not self.buttonToggleStatus[0], False, False, False, False, False]
+                self.buttonToggleStatus = [False, not self.buttonToggleStatus[1], False, False, False, False, False]
             elif self.buttonBox.getRawButtonPressed(3):
-                self.buttonToggleStatus = [False, False, not self.buttonToggleStatus[0], False, False, False, False]
+                self.buttonToggleStatus = [False, False, not self.buttonToggleStatus[2], False, False, False, False]
             elif self.buttonBox.getRawButtonPressed(4):
-                self.buttonToggleStatus = [False, False, False, not self.buttonToggleStatus[0], False, False, False]
+                self.buttonToggleStatus = [False, False, False, not self.buttonToggleStatus[3], False, False, False]
             elif self.buttonBox.getRawButtonPressed(5):
-                self.buttonToggleStatus = [False, False, False, False, not self.buttonToggleStatus[0], False, False]
+                self.buttonToggleStatus = [False, False, False, False, not self.buttonToggleStatus[4], False, False]
             elif self.buttonBox.getRawButtonPressed(6):
-                self.buttonToggleStatus = [False, False, False, False, False, not self.buttonToggleStatus[0], False]
+                self.buttonToggleStatus = [False, False, False, False, False, not self.buttonToggleStatus[5], False]
             elif self.buttonBox.getRawButtonPressed(7):
-                self.buttonToggleStatus = [False, False, False, False, False, False, not self.buttonToggleStatus[0]]
+                self.buttonToggleStatus = [False, False, False, False, False, False, not self.buttonToggleStatus[6]]
 
             liftTicks = self.liftEncoder.get()
             hallState = self.Hall.get()
@@ -237,61 +237,61 @@ class Gemini(wpilib.TimedRobot):
             lJoystickAxisStates = [self.leftStick.getRawAxis(1), self.leftStick.getRawAxis(2), self.leftStick.getRawAxis(3)]
 
             # define lift stages
-            def cargoOne():
+            def cargo_one():
                 if liftTicks <= 133:  # Cargo 1
                     self.lift.set(0.5)
                 elif liftTicks > 133:
                     self.lift.set(0.05)
 
-            def cargoTwo():
+            def cargo_two():
                 if liftTicks <= 270:   # Cargo 2
                     self.lift.set(0.5)
                 elif liftTicks > 270:
                     self.lift.set(0.05)
 
-            def cargoThree():
+            def cargo_three():
                 if liftTicks <= 415:   # Cargo 3
                     self.lift.set(0.5)
                 elif liftTicks > 415:
                     self.lift.set(0.05)
 
-            def hatchOne():
+            def hatch_one():
                 if liftTicks <= 96:    # Hatch 1
                     self.lift.set(0.5)
                 elif liftTicks > 96:
                     self.lift.set(0.05)
 
-            def hatchTwo():
+            def hatch_two():
                 if liftTicks <= 237:   # Hatch 2
                     self.lift.set(0.5)
                 elif liftTicks > 237:
                     self.lift.set(0.05)
 
-            def hatchThree():
+            def hatch_three():
                 if liftTicks <= 378:   # Hatch 3
                     self.lift.set(0.5)
                 elif liftTicks > 378:
                     self.lift.set(0.05)
 
-            def liftEncoderReset():
+            def lift_encoder_reset():
                 self.lift.set(0.01)
                 if hallState is True:
                     self.liftEncoder.reset()
 
             if self.buttonToggleStatus[0] is True:
-                cargoThree()
+                cargo_three()
             elif self.buttonToggleStatus[1] is True:
-                hatchThree()
+                hatch_three()
             elif self.buttonToggleStatus[2] is True:
-                cargoTwo()
+                cargo_two()
             elif self.buttonToggleStatus[3] is True:
-                hatchTwo()
+                hatch_two()
             elif self.buttonToggleStatus[4] is True:
-                cargoOne()
+                cargo_one()
             elif self.buttonToggleStatus[5] is True:
-                hatchOne()
+                hatch_one()
             elif self.buttonToggleStatus[6] is True:
-                liftEncoderReset()
+                lift_encoder_reset()
 
             # compressor state
             self.sd.putString("Compressor Status: ", "Enabled" if compressorState is True else "Disabled")
@@ -307,7 +307,7 @@ class Gemini(wpilib.TimedRobot):
 
             # hatch station range state
             self.sd.putString("PLAYER STATION RANGE: ", "YES!!!!" if 0.142 <= self.ultraValue <= 0.146 else "NO!")
-            #self.sd.putNumber("Ultrasonic Voltage: ", self.ultraValue)
+            # self.sd.putNumber("Ultrasonic Voltage: ", self.ultraValue)
 
             # hatch spaceship range
             self.sd.putString("HATCH RANGE: ", "HATCH IN RANGE" if 0.7 <= self.cargoUltraValue <= 1.56 else "NOT IN RANGE")
@@ -334,9 +334,9 @@ class Gemini(wpilib.TimedRobot):
             if True in self.buttonToggleStatus is False:
                 if xboxButtonStates[4]:  # hold
                     self.lift.set(0.05)
-                elif xboxAxisStates[2]:  # up
+                elif xboxAxisStates[2] > 0.1:  # up
                     self.lift.set(xboxAxisStates[2] / 1.5)
-                elif xboxAxisStates[1]:  # down
+                elif xboxAxisStates[1] > 0.1:  # down
                     self.lift.set(-xboxAxisStates[1] * 0.25)
                 else:
                     self.lift.set(0)
@@ -370,7 +370,7 @@ class Gemini(wpilib.TimedRobot):
             leftSign = leftAxis / fabs(leftAxis) if leftAxis != 0 else 0
             rightSign = rightAxis / fabs(rightAxis) if rightAxis != 0 else 0
 
-            self.drive.tankDrive(-(leftSign) * (1 / divisor) * (leftAxis ** 2), -(rightSign) * (1 / divisor) * (rightAxis ** 2))
+            self.drive.tankDrive(-leftSign * (1 / divisor) * (leftAxis ** 2), -rightSign * (1 / divisor) * (rightAxis ** 2))
 
     def teleopInit(self):
         ''' Executed at the start of teleop mode. '''
@@ -397,17 +397,17 @@ class Gemini(wpilib.TimedRobot):
         if self.buttonBox.getRawButtonPressed(1):
             self.buttonToggleStatus = [not self.buttonToggleStatus[0], False, False, False, False, False, False]
         elif self.buttonBox.getRawButtonPressed(2):
-            self.buttonToggleStatus = [False, not self.buttonToggleStatus[0], False, False, False, False, False]
+            self.buttonToggleStatus = [False, not self.buttonToggleStatus[1], False, False, False, False, False]
         elif self.buttonBox.getRawButtonPressed(3):
-            self.buttonToggleStatus = [False, False, not self.buttonToggleStatus[0], False, False, False, False]
+            self.buttonToggleStatus = [False, False, not self.buttonToggleStatus[2], False, False, False, False]
         elif self.buttonBox.getRawButtonPressed(4):
-            self.buttonToggleStatus = [False, False, False, not self.buttonToggleStatus[0], False, False, False]
+            self.buttonToggleStatus = [False, False, False, not self.buttonToggleStatus[3], False, False, False]
         elif self.buttonBox.getRawButtonPressed(5):
-            self.buttonToggleStatus = [False, False, False, False, not self.buttonToggleStatus[0], False, False]
+            self.buttonToggleStatus = [False, False, False, False, not self.buttonToggleStatus[4], False, False]
         elif self.buttonBox.getRawButtonPressed(6):
-            self.buttonToggleStatus = [False, False, False, False, False, not self.buttonToggleStatus[0], False]
+            self.buttonToggleStatus = [False, False, False, False, False, not self.buttonToggleStatus[5], False]
         elif self.buttonBox.getRawButtonPressed(7):
-            self.buttonToggleStatus = [False, False, False, False, False, False, not self.buttonToggleStatus[0]]
+            self.buttonToggleStatus = [False, False, False, False, False, False, not self.buttonToggleStatus[6]]
 
         liftTicks = self.liftEncoder.get()
         hallState = self.Hall.get()
@@ -433,61 +433,61 @@ class Gemini(wpilib.TimedRobot):
         lJoystickAxisStates = [self.leftStick.getRawAxis(1), self.leftStick.getRawAxis(2), self.leftStick.getRawAxis(3)]
 
         # define lift stages
-        def cargoOne():
+        def cargo_one():
             if liftTicks <= 133:  # Cargo 1
                 self.lift.set(0.5)
             elif liftTicks > 133:
                 self.lift.set(0.05)
 
-        def cargoTwo():
+        def cargo_two():
             if liftTicks <= 270:  # Cargo 2
                 self.lift.set(0.5)
             elif liftTicks > 270:
                 self.lift.set(0.05)
 
-        def cargoThree():
+        def cargo_three():
             if liftTicks <= 415:  # Cargo 3
                 self.lift.set(0.5)
             elif liftTicks > 415:
                 self.lift.set(0.05)
 
-        def hatchOne():
+        def hatch_one():
             if liftTicks <= 96:  # Hatch 1
                 self.lift.set(0.5)
             elif liftTicks > 96:
                 self.lift.set(0.05)
 
-        def hatchTwo():
+        def hatch_two():
             if liftTicks <= 237:  # Hatch 2
                 self.lift.set(0.5)
             elif liftTicks > 237:
                 self.lift.set(0.05)
 
-        def hatchThree():
+        def hatch_three():
             if liftTicks <= 378:  # Hatch 3
                 self.lift.set(0.5)
             elif liftTicks > 378:
                 self.lift.set(0.05)
 
-        def liftEncoderReset():
+        def lift_encoder_reset():
             self.lift.set(0.01)
             if hallState is True:
                 self.liftEncoder.reset()
 
         if self.buttonToggleStatus[0] is True:
-            cargoThree()
+            cargo_three()
         elif self.buttonToggleStatus[1] is True:
-            hatchThree()
+            hatch_three()
         elif self.buttonToggleStatus[2] is True:
-            cargoTwo()
+            cargo_two()
         elif self.buttonToggleStatus[3] is True:
-            hatchTwo()
+            hatch_two()
         elif self.buttonToggleStatus[4] is True:
-            cargoOne()
+            cargo_one()
         elif self.buttonToggleStatus[5] is True:
-            hatchOne()
+            hatch_one()
         elif self.buttonToggleStatus[6] is True:
-            liftEncoderReset()
+            lift_encoder_reset()
 
         # compressor state
         self.sd.putString("Compressor Status: ", "Enabled" if compressorState is True else "Disabled")
@@ -530,9 +530,9 @@ class Gemini(wpilib.TimedRobot):
         if True in self.buttonToggleStatus is False:
             if xboxButtonStates[4]:  # hold
                 self.lift.set(0.05)
-            elif xboxAxisStates[2]:  # up
+            elif xboxAxisStates[2] > 0.1:  # up
                 self.lift.set(xboxAxisStates[2] / 1.5)
-            elif xboxAxisStates[1]:  # down
+            elif xboxAxisStates[1] > 0.1:  # down
                 self.lift.set(-xboxAxisStates[1] * 0.25)
             else:
                 self.lift.set(0)
@@ -566,7 +566,9 @@ class Gemini(wpilib.TimedRobot):
         leftSign = leftAxis / fabs(leftAxis) if leftAxis != 0 else 0
         rightSign = rightAxis / fabs(rightAxis) if rightAxis != 0 else 0
 
-        self.drive.tankDrive(-(leftSign) * (1 / divisor) * (leftAxis ** 2), -(rightSign) * (1 / divisor) * (rightAxis ** 2))
+        self.drive.tankDrive(-leftSign * (1 / divisor) * (leftAxis ** 2), -rightSign * (1 / divisor) * (rightAxis ** 2))
+
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.DEBUG)
     wpilib.run(Gemini)
